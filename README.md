@@ -72,11 +72,7 @@ $ apache spark
 
 ```bash
 # python modules required
-$ pyspark (for connecting the spark server and processing huge data)
-$ requests (for sending and fetching get, put, post requests for APIs)
-$ findspark (for checking the spark server is present or not)
 $ python-dotenv (for loading env variables)
-$ mysql.connector (for sql connections)
 ```
 ## License
 
