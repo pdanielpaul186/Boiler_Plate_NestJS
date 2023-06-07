@@ -61,14 +61,11 @@ $ npm run test:cov
 ## Dependencies/Pre-Requisites
 
 ```bash
-# python
-$ python 
-
-# apache spark
-$ apache spark 
+# python environment
+$ python  
 ```
 
-## Dependencies/Pre-Requisites
+## Python Module Dependencies
 
 ```bash
 # python modules required
