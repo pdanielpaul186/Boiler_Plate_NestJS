@@ -16,7 +16,7 @@ import { UsersModule } from './modules/users/users.module';
       validate: validate
     }),
     MongooseModule.forRoot(process.env.MONGO_URL,{
-      dbName: "FinOPs_BillOPs"
+      dbName: "dbName"
     }),
     AuthModule,
     InitialiserModule,
