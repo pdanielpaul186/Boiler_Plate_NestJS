@@ -26,7 +26,7 @@ export class InitialiserService implements OnModuleInit {
             try {
                 const hash = await bcrypt.hash(process.env.admin_password, Number(process.env.salt_rounds));
                 const companyDetails : company =  {
-                    companyName : "Data Intensity LLC",
+                    companyName : "Clouknight",
                     createdOn: new Date()
                 }
 
@@ -40,7 +40,7 @@ export class InitialiserService implements OnModuleInit {
                     role: "super-admin",
                     email: process.env.admin_username,
                     password : hash,
-                    associatedCompany: await this.companyModel.findOne({ companyName: "Data Intensity LLC" },{ _id : 1 })
+                    associatedCompany: await this.companyModel.findOne({ companyName: "Clouknight" },{ _id : 1 })
                 };
                 const createdAdmin = new this.userModel(adminUserDetails);
                 createdAdmin.save();
