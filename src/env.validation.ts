@@ -1,81 +1,102 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsNumber, IsString, validateSync, IsNotEmpty, IsEmail, IsAlphanumeric } from 'class-validator';
-import { Logger } from '@nestjs/common'
+import {
+  IsEnum,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsEmail,
+  IsAlphanumeric,
+  validateSync,
+} from 'class-validator';
+import { Logger } from '@nestjs/common';
 
 enum Environment {
-    Development = 'development',
-    Production = 'production',
-    Test = 'testing',
+  Development = 'development',
+  Production = 'production',
+  Staging = 'staging',
+  Test = 'testing',
 }
 
 class EnvironmentVariables {
+  @IsEnum(Environment)
+  @IsOptional()
+  NODE_ENV: Environment;
 
-    @IsEnum(Environment)
-    @IsNotEmpty()
-    NODE_ENV: Environment;
+  @IsNumber()
+  @IsOptional()
+  PORT: number;
 
-    @IsNumber()
-    @IsNotEmpty()
-    PORT: number;
-    
-    @IsString()
-    @IsNotEmpty()
-    MONGO_URL: string;
+  @IsString()
+  @IsOptional()
+  MONGO_URL: string;
 
-    @IsNotEmpty()
-    // @IsIP()
-    SQL_HOSTNAME: string;
+  @IsString()
+  @IsOptional()
+  MONGODB_URI: string;
 
-    @IsString()
-    @IsNotEmpty()
-    SQL_USERNAME: string;
-    
-    @IsNumber()
-    @IsNotEmpty()
-    SQL_PORT: number;
-    
-    @IsString()
-    @IsNotEmpty()
-    SQL_PASSWORD: string;
+  @IsString()
+  @IsOptional()
+  MONGO_DB_NAME: string;
 
-    @IsEmail()
-    @IsNotEmpty()
-    admin_username: string;
+  @IsString()
+  @IsOptional()
+  SQL_HOSTNAME: string;
 
-    @IsString()
-    @IsNotEmpty()
-    admin_password: string;
+  @IsString()
+  @IsOptional()
+  SQL_USERNAME: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    salt_rounds: number;
+  @IsNumber()
+  @IsOptional()
+  SQL_PORT: number;
 
-    @IsAlphanumeric()
-    @IsNotEmpty()
-    secret_key: string;
+  @IsString()
+  @IsOptional()
+  SQL_PASSWORD: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    expires_in: number;
+  @IsEmail()
+  @IsOptional()
+  admin_username: string;
 
+  @IsString()
+  @IsOptional()
+  admin_password: string;
+
+  @IsNumber()
+  @IsOptional()
+  salt_rounds: number;
+
+  @IsAlphanumeric()
+  @IsOptional()
+  secret_key: string;
+
+  @IsNumber()
+  @IsOptional()
+  expires_in: number;
 }
 
 export function validate(config: Record<string, unknown>) {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
 
-    const validatedConfig = plainToInstance(
-        EnvironmentVariables,
-        config,
-        { enableImplicitConversion: true },
-    )
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: true,
+    whitelist: true,
+    forbidNonWhitelisted: false,
+  });
 
-    const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+  if (errors.length <= 0) {
+    Logger.log('Environment variables validated successfully', 'EnvValidation');
+  } else {
+    Logger.warn(
+      `Environment validation warnings: ${errors
+        .map((e) => e.property)
+        .join(', ')}`,
+      'EnvValidation',
+    );
+  }
 
-    if ( errors.length <= 0 ) {
-        Logger.log("No errors found in loading environment variables !!!!", validate.name);
-    } else {
-        throw new Error(errors.toString());
-    }
-    
-    return validatedConfig;
-
+  return validatedConfig;
 }
