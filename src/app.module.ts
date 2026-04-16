@@ -11,16 +11,23 @@ import { UsersModule } from './modules/users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env',
+      envFilePath: ['.env.production', '.env'],
       isGlobal: true,
-      validate: validate
+      validate: validate,
+      ignoreEnvVars: true,
+      ignoreEnvFile: false,
     }),
-    MongooseModule.forRoot(process.env.MONGO_URL,{
-      dbName: "dbName"
-    }),
+    MongooseModule.forRoot(
+      process.env.MONGO_URL ||
+        process.env.MONGODB_URI ||
+        'mongodb://localhost:27017',
+      {
+        dbName: process.env.MONGO_DB_NAME || 'ola_backend',
+      },
+    ),
     AuthModule,
     InitialiserModule,
-    UsersModule
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
