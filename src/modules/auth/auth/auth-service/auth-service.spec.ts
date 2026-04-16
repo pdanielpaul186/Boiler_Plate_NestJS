@@ -97,5 +97,32 @@ describe('AuthService', () => {
         service.signIn('nonexistent@example.com', 'password123'),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw ForbiddenException for unknown check result', async () => {
+      userService.checkUser.mockResolvedValue('unknown_result' as any);
+
+      await expect(
+        service.signIn('admin@example.com', 'password123'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should include company name in JWT payload', async () => {
+      const userWithCompany = {
+        ...mockUser,
+        associatedCompany: { companyName: 'MyCompany' },
+      };
+      userService.checkUser.mockResolvedValue('user_checks_complete');
+      userService.fetchUser.mockResolvedValue(userWithCompany as any);
+      jwtService.signAsync.mockResolvedValue('mock-jwt-token');
+
+      await service.signIn('admin@example.com', 'password123');
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          associatedCompany: 'MyCompany',
+        }),
+        expect.any(Object),
+      );
+    });
   });
 });
