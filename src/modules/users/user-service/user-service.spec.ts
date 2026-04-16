@@ -19,6 +19,7 @@ describe('UserService', () => {
   beforeEach(async () => {
     mockUserModel = createMockUserModel();
     jest.clearAllMocks();
+    process.env.salt_rounds = '10';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -114,6 +115,99 @@ describe('UserService', () => {
       expect(mockUserModel.findOne).toHaveBeenCalledWith({
         email: 'test@example.com',
       });
+    });
+  });
+
+  describe('createUser', () => {
+    it('should return InvalidArgumentException when user already exists', async () => {
+      mockUserModel.find.mockReturnValue({
+        countDocuments: jest.fn().mockResolvedValue(1),
+      });
+
+      const userDetails = {
+        name: 'Existing User',
+        email: 'existing@example.com',
+        password: 'password123',
+        role: 'admin',
+        associatedCompany: {} as any,
+      };
+
+      const result = await service.createUser(userDetails);
+      expect(result.message).toBe('user already present');
+    });
+
+    it('should create a new user successfully', async () => {
+      const bcrypt = require('bcrypt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
+
+      const mockSave = jest.fn().mockResolvedValue(undefined);
+      const MockUserModel = jest.fn().mockImplementation(() => ({
+        save: mockSave,
+      }));
+      (MockUserModel as any).find = jest.fn().mockReturnValue({
+        countDocuments: jest.fn().mockResolvedValue(0),
+      });
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UserService,
+          {
+            provide: getModelToken(User.name),
+            useValue: MockUserModel,
+          },
+        ],
+      }).compile();
+
+      const testService = module.get<UserService>(UserService);
+
+      const userDetails = {
+        name: 'New User',
+        email: 'new@example.com',
+        password: 'password123',
+        role: 'admin',
+        associatedCompany: { _id: 'company-id' } as any,
+      };
+
+      const result = await testService.createUser(userDetails);
+      expect(result.message).toBe('User Created !!!!');
+      expect(mockSave).toHaveBeenCalled();
+    });
+
+    it('should return functionNotExecutedException on database error', async () => {
+      const bcrypt = require('bcrypt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
+
+      const MockUserModel = jest.fn().mockImplementation(() => ({
+        save: jest.fn().mockImplementation(() => {
+          throw new Error('Database connection failed');
+        }),
+      }));
+      (MockUserModel as any).find = jest.fn().mockReturnValue({
+        countDocuments: jest.fn().mockResolvedValue(0),
+      });
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UserService,
+          {
+            provide: getModelToken(User.name),
+            useValue: MockUserModel,
+          },
+        ],
+      }).compile();
+
+      const testService = module.get<UserService>(UserService);
+
+      const userDetails = {
+        name: 'New User',
+        email: 'new@example.com',
+        password: 'password123',
+        role: 'admin',
+        associatedCompany: { _id: 'company-id' } as any,
+      };
+
+      const result = await testService.createUser(userDetails);
+      expect(result.message).toContain('Error');
     });
   });
 });
